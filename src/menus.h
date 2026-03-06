@@ -3,12 +3,19 @@
 
 #include "types.h"
 
-void chargement();
-ListePers* quitterSauvegarder(ListePers* arbre);
-void sauvegarder(ListePers* arbre);
+/* Menu principal - retourne l'arbre (potentiellement modifie) */
 ListePers* menuPrincipal(ListePers* arbre);
-ListePers* gerer(ListePers* arbre);
-void modifierPers(ListePers* arbre);
-void consulter(ListePers* arbre);
 
-#endif // MENUS_H
+/* Sous-menus */
+void       menuModifier(ListePers* arbre);
+void       menuLiens(ListePers* arbre);
+ListePers* menuSupprimer(ListePers* arbre);
+void       menuConsulter(ListePers* arbre);
+ListePers* menuCharger(ListePers* arbre);
+void       menuSauvegarder(ListePers* arbre);
+void       menuLivret(ListePers* arbre);
+
+/* Quitter avec sauvegarde optionnelle */
+ListePers* quitterSauvegarder(ListePers* arbre);
+
+#endif /* MENUS_H */

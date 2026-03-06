@@ -92,7 +92,7 @@ ListePers* trouverPetitsEnfants(ListePers* arbre, Pers* pers) {
     ListePers* maillon = arbre;
 
     while (maillon != NULL) {
-        if (maillon->pers->pere != NULL && (maillon->pers->pere->pere == pers || maillon->pers->pere->mere == pers) ||
+        if ((maillon->pers->pere != NULL && (maillon->pers->pere->pere == pers || maillon->pers->pere->mere == pers)) ||
             (maillon->pers->mere != NULL && (maillon->pers->mere->pere == pers || maillon->pers->mere->mere == pers))) {
             petitsEnfants = fix_pers_liste_creer(petitsEnfants, maillon->pers);
         }
@@ -108,10 +108,10 @@ ListePers* trouverGrandsParents(ListePers* arbre, Pers* pers) {
     ListePers* maillon = arbre;
 
     while (maillon != NULL) {
-        if (maillon->pers->pere != NULL && (maillon->pers->pere->pere != NULL && maillon->pers->pere->pere == pers) ||
-            (maillon->pers->pere->mere != NULL && maillon->pers->pere->mere == pers) ||
-            (maillon->pers->mere != NULL && (maillon->pers->mere->pere != NULL && maillon->pers->mere->pere == pers) ||
-             (maillon->pers->mere->mere != NULL && maillon->pers->mere->mere == pers))) {
+        if ((maillon->pers->pere != NULL && ((maillon->pers->pere->pere != NULL && maillon->pers->pere->pere == pers) ||
+             (maillon->pers->pere->mere != NULL && maillon->pers->pere->mere == pers))) ||
+            (maillon->pers->mere != NULL && ((maillon->pers->mere->pere != NULL && maillon->pers->mere->pere == pers) ||
+             (maillon->pers->mere->mere != NULL && maillon->pers->mere->mere == pers)))) {
             grandsParents = fix_pers_liste_creer(grandsParents, maillon->pers);
         }
 
@@ -208,10 +208,9 @@ void afficherEnfantsRecurs(ListePers* arbre, Pers* pers) {
     }
 }
 
-void afficherDescendance(ListePers* arbre) {
-    Pers* personne = get_pers_liste(arbre);
+void afficherDescendance(ListePers* arbre, Pers* personne) {
     printf("Descendance de %s %s:\n", get_nom_pers(personne), get_prenom_pers(personne));
-    afficherEnfantsRecurs(arbre, get_enfants_pers(personne));
+    afficherEnfantsRecurs(arbre, personne);
 }
 
 void afficherParentRecurs(ListePers* arbre, Pers* pers) {
@@ -223,35 +222,107 @@ void afficherParentRecurs(ListePers* arbre, Pers* pers) {
     Pers* mere = get_mere_pers(pers);
 
     if (pere != NULL) {
-        printf("Père:\n");
+        printf("Pï¿½re:\n");
         afficherPers(pere);
         afficherParentRecurs(arbre, pere);
     }
 
     if (mere != NULL) {
-        printf("Mère:\n");
+        printf("Mï¿½re:\n");
         afficherPers(mere);
         afficherParentRecurs(arbre, mere);
     }
 }
 
-void afficherAscendance(ListePers* arbre) {
-    Pers* personne = get_pers_liste(arbre);
+void afficherAscendance(ListePers* arbre, Pers* personne) {
     printf("Ascendance de %s %s:\n", get_nom_pers(personne), get_prenom_pers(personne));
     afficherParentRecurs(arbre, personne);
 }
 
 void affichage(ListePers* arbre) {
+    afficherArbre(arbre);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Affichage en format arbre ASCII                                     */
+/* ------------------------------------------------------------------ */
+
+/* Affiche une personne sur une ligne avec ses annees et conjoint */
+static void afficherLigneNoeud(Pers* p) {
+    printf("%s %s", p->prenom, p->nom);
+    if (p->naissance.annee > 0) {
+        printf(" (%d", p->naissance.annee);
+        if (!p->vivant && p->deces.annee > 0)
+            printf("-%d", p->deces.annee);
+        printf(")");
+    }
+    if (p->conjoint != NULL)
+        printf("  x  %s %s", p->conjoint->prenom, p->conjoint->nom);
+    printf("\n");
+}
+
+/* Recursion : affiche les enfants de 'pers' en arbre ASCII.
+   prefixe : chaine de decoration accumulee pour l'indentation.
+   estDernier : 1 si c'est le dernier enfant dans la liste. */
+static void afficherArbreRecurs(Pers* pers, const char* prefixe, int estDernier) {
+    if (pers == NULL) return;
+
+    printf("%s", prefixe);
+    printf(estDernier ? "\\-- " : "|-- ");
+    afficherLigneNoeud(pers);
+
+    /* Construire le nouveau prefixe pour les descendants */
+    char nouveauPrefixe[512];
+    snprintf(nouveauPrefixe, sizeof(nouveauPrefixe), "%s%s",
+             prefixe, estDernier ? "    " : "|   ");
+
+    ListePers* enfants = pers->enfants;
+    while (enfants != NULL) {
+        int dernier = (enfants->suivant == NULL);
+        afficherArbreRecurs(enfants->pers, nouveauPrefixe, dernier);
+        enfants = enfants->suivant;
+    }
+}
+
+void afficherArbre(ListePers* arbre) {
     if (arbre == NULL) {
-        printf("Arbre vide.\n");
+        printf("  L'arbre est vide.\n");
         return;
     }
 
-    printf("Personne principale:\n");
-    afficherPers(get_pers_liste(arbre));
+    printf("\n================================================\n");
+    printf("            ARBRE GENEALOGIQUE\n");
+    printf("================================================\n\n");
 
-    afficherDescendance(arbre);
-    afficherAscendance(arbre);
+    /* Afficher d'abord les racines (personnes sans parents connus) */
+    ListePers* courant = arbre;
+    int nbRacines = 0;
+    while (courant != NULL) {
+        Pers* p = courant->pers;
+        if (p->pere == NULL && p->mere == NULL) {
+            afficherLigneNoeud(p);
+            ListePers* enfants = p->enfants;
+            while (enfants != NULL) {
+                int dernier = (enfants->suivant == NULL);
+                afficherArbreRecurs(enfants->pers, "", dernier);
+                enfants = enfants->suivant;
+            }
+            printf("\n");
+            nbRacines++;
+        }
+        courant = courant->suivant;
+    }
+
+    /* Si aucune racine (tout le monde a des parents dans l'arbre),
+       afficher toutes les personnes en liste simple */
+    if (nbRacines == 0) {
+        printf("  (Aucune racine identifiee - affichage liste)\n\n");
+        courant = arbre;
+        while (courant != NULL) {
+            afficherPers(courant->pers);
+            courant = courant->suivant;
+        }
+    }
 }
 
 

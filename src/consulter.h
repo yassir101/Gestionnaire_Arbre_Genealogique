@@ -19,9 +19,10 @@ void afficherLien(ListePers* arbre, Pers* pers1, Pers* pers2);
 void consulterLien(ListePers* arbre);
 void afficherTLM(ListePers* arbre);
 void afficherEnfantsRecurs(ListePers* arbre, Pers* pers);
-void afficherDescendance(ListePers* arbre);
+void afficherDescendance(ListePers* arbre, Pers* personne);
 void afficherParentRecurs(ListePers* arbre, Pers* pers);
-void afficherAscendance(ListePers* arbre);
+void afficherAscendance(ListePers* arbre, Pers* personne);
 void affichage(ListePers* arbre);
+void afficherArbre(ListePers* arbre);
 
-#endif  // CONSULTER_H
+#endif  /* CONSULTER_H */

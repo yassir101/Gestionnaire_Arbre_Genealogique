@@ -3,15 +3,16 @@
 #include "files.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void modifierNom(Pers *pers){
     printf("Entrez le nouveau nom:\n ");
-    scanf("%s", pers->nom);
+    scanf("%49s", pers->nom);
 }
 
 void modifierPrenom(Pers *pers){
     printf("Entrez le nouveau prenom: \n");
-    scanf("%s", pers->prenom);
+    scanf("%49s", pers->prenom);
 }
 
 void modifierNaissance(Pers *pers) {
@@ -54,18 +55,30 @@ void supprimerLienParentReci(Pers *parent, Pers *enfant) {
 
 void ajouterEnfant(ListePers *arbre, Pers *pers) {
     int numEnfant;
-    printf("Entrez le numéro de l'enfant a ajouter : ");
+    printf("Entrez le numero de l'enfant a ajouter : ");
     scanf("%d", &numEnfant);
 
     Pers *enfant = retrouverPersavecNumero(arbre, numEnfant);
-    if (enfant != NULL) {
-        pers->enfants = fix_pers_liste_creer(pers->enfants, enfant);
-        printf("Enfant ajoute avec succes.\n");
-    } else {
+    if (enfant == NULL) {
         printf("Enfant introuvable.\n");
+        return;
     }
-}
 
+    /* Lien bidirectionnel */
+    pers->enfants = fix_pers_liste_creer(pers->enfants, enfant);
+
+    char role;
+    printf("Ce parent est le (p)ere ou la (m)ere de cet enfant ? (p/m) : ");
+    scanf(" %c", &role);
+    if (role == 'p' || role == 'P') {
+        enfant->pere = pers;
+        enfant->np   = pers->n;
+    } else {
+        enfant->mere = pers;
+        enfant->nm   = pers->n;
+    }
+    printf("Enfant ajoute avec succes.\n");
+}
 void ajouterPere(ListePers *arbre, Pers *pers)
 {
     int numPere;
@@ -75,6 +88,9 @@ void ajouterPere(ListePers *arbre, Pers *pers)
     Pers *pere = retrouverPersavecNumero(arbre, numPere);
     if (pere != NULL) {
         pers->pere = pere;
+        pers->np   = pere->n;
+        /* Lien inverse : ajouter pers dans la liste enfants du pere */
+        pere->enfants = fix_pers_liste_creer(pere->enfants, pers);
         printf("Pere ajoute avec succes.\n");
     } else {
         printf("Pere introuvable.\n");
@@ -89,6 +105,11 @@ void ajouterMere(ListePers *arbre, Pers *pers) {
     Pers *mere = retrouverPersavecNumero(arbre, numMere);
     if (mere != NULL) {
         pers->mere = mere;
+        pers->nm   = mere->n;
+        /* Lien inverse uniquement si pas deja dans la liste du pere */
+        if (pers->pere == NULL) {
+            mere->enfants = fix_pers_liste_creer(mere->enfants, pers);
+        }
         printf("Mere ajoutee avec succes.\n");
     } else {
         printf("Mere introuvable.\n");
@@ -113,7 +134,7 @@ void supprimerEnfant(Pers *pers)
 {
     if (pers->enfants != NULL) {
         int numEnfant;
-        printf("Entrez le numéro de l'enfant que l'on souhaite supprimer: ");
+        printf("Entrez le numï¿½ro de l'enfant que l'on souhaite supprimer: ");
         scanf("%d", &numEnfant);
 
         ListePers *nouvelleListe = sup_maillon_liste(pers->enfants, retrouverPersavecNumero(pers->enfants, numEnfant));
