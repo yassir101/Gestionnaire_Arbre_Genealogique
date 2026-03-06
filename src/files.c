@@ -123,8 +123,116 @@ ListePers* chargerArbre(char* nomFich) {
 
     fclose(fichier);
 
-    /* Reconstruit les pointeurs pere/mere/conjoint a partir des numeros */
+    /* 1. Reconstruit les pointeurs pere/mere/conjoint a partir des numeros */
     arbre = retrouverLiens(arbre);
 
+    /* 2. Reconstruit la liste enfants de chaque pere
+          (seul le parent primaire gere la liste pour eviter les doublons) */
+    {
+        ListePers* courant = arbre;
+        while (courant != NULL) {
+            Pers* p = courant->pers;
+            if (p->pere != NULL) {
+                p->pere->enfants = fix_pers_liste_creer(p->pere->enfants, p);
+            } else if (p->mere != NULL) {
+                p->mere->enfants = fix_pers_liste_creer(p->mere->enfants, p);
+            }
+            courant = courant->suivant;
+        }
+    }
+
     return arbre;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Export livret de famille                                            */
+/* ------------------------------------------------------------------ */
+
+static void ecrireDate(FILE* f, Date d, const char* label) {
+    if (d.annee > 0)
+        fprintf(f, "  %-16s: %02d/%02d/%d\n", label, d.jour, d.mois, d.annee);
+}
+
+void exporterLivretFamille(ListePers* arbre, const char* nomFich) {
+    FILE* f = fopen(nomFich, "w");
+    if (f == NULL) {
+        perror("Erreur d'ouverture du fichier");
+        return;
+    }
+
+    fprintf(f, "================================================\n");
+    fprintf(f, "            LIVRET DE FAMILLE\n");
+    fprintf(f, "================================================\n\n");
+
+    ListePers* courant = arbre;
+    int fiche = 1;
+    while (courant != NULL) {
+        Pers* p = courant->pers;
+
+        fprintf(f, "--- FICHE N%d ---\n\n", fiche++);
+
+        /* Identite */
+        fprintf(f, "  IDENTITE\n");
+        fprintf(f, "  %-16s: %s %s\n", "Nom complet", p->prenom, p->nom);
+        ecrireDate(f, p->naissance, "Naissance");
+        fprintf(f, "  %-16s: %s\n", "Statut", p->vivant ? "Vivant(e)" : "Decede(e)");
+        if (!p->vivant) ecrireDate(f, p->deces, "Deces");
+        fprintf(f, "\n");
+
+        /* Parents */
+        if (p->pere != NULL || p->mere != NULL) {
+            fprintf(f, "  PARENTS\n");
+            if (p->pere != NULL) {
+                fprintf(f, "  Pere             : %s %s", p->pere->prenom, p->pere->nom);
+                if (p->pere->naissance.annee > 0)
+                    fprintf(f, " (ne le %02d/%02d/%d)",
+                            p->pere->naissance.jour,
+                            p->pere->naissance.mois,
+                            p->pere->naissance.annee);
+                fprintf(f, "\n");
+            }
+            if (p->mere != NULL) {
+                fprintf(f, "  Mere             : %s %s", p->mere->prenom, p->mere->nom);
+                if (p->mere->naissance.annee > 0)
+                    fprintf(f, " (nee le %02d/%02d/%d)",
+                            p->mere->naissance.jour,
+                            p->mere->naissance.mois,
+                            p->mere->naissance.annee);
+                fprintf(f, "\n");
+            }
+            fprintf(f, "\n");
+        }
+
+        /* Conjoint */
+        if (p->conjoint != NULL) {
+            fprintf(f, "  CONJOINT(E)\n");
+            fprintf(f, "  %-16s: %s %s\n", "Nom complet",
+                    p->conjoint->prenom, p->conjoint->nom);
+            ecrireDate(f, p->conjoint->naissance, "Naissance");
+            fprintf(f, "\n");
+        }
+
+        /* Enfants */
+        if (p->enfants != NULL) {
+            fprintf(f, "  ENFANTS\n");
+            ListePers* e = p->enfants;
+            int i = 1;
+            while (e != NULL) {
+                fprintf(f, "  %2d. %s %s", i++, e->pers->prenom, e->pers->nom);
+                if (e->pers->naissance.annee > 0)
+                    fprintf(f, "  (ne(e) le %02d/%02d/%d)",
+                            e->pers->naissance.jour,
+                            e->pers->naissance.mois,
+                            e->pers->naissance.annee);
+                fprintf(f, "\n");
+                e = e->suivant;
+            }
+            fprintf(f, "\n");
+        }
+
+        fprintf(f, "------------------------------------------------\n\n");
+        courant = courant->suivant;
+    }
+
+    fclose(f);
 }

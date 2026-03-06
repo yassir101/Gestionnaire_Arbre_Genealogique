@@ -240,16 +240,88 @@ void afficherAscendance(ListePers* arbre, Pers* personne) {
 }
 
 void affichage(ListePers* arbre) {
+    afficherArbre(arbre);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Affichage en format arbre ASCII                                     */
+/* ------------------------------------------------------------------ */
+
+/* Affiche une personne sur une ligne avec ses annees et conjoint */
+static void afficherLigneNoeud(Pers* p) {
+    printf("%s %s", p->prenom, p->nom);
+    if (p->naissance.annee > 0) {
+        printf(" (%d", p->naissance.annee);
+        if (!p->vivant && p->deces.annee > 0)
+            printf("-%d", p->deces.annee);
+        printf(")");
+    }
+    if (p->conjoint != NULL)
+        printf("  x  %s %s", p->conjoint->prenom, p->conjoint->nom);
+    printf("\n");
+}
+
+/* Recursion : affiche les enfants de 'pers' en arbre ASCII.
+   prefixe : chaine de decoration accumulee pour l'indentation.
+   estDernier : 1 si c'est le dernier enfant dans la liste. */
+static void afficherArbreRecurs(Pers* pers, const char* prefixe, int estDernier) {
+    if (pers == NULL) return;
+
+    printf("%s", prefixe);
+    printf(estDernier ? "\\-- " : "|-- ");
+    afficherLigneNoeud(pers);
+
+    /* Construire le nouveau prefixe pour les descendants */
+    char nouveauPrefixe[512];
+    snprintf(nouveauPrefixe, sizeof(nouveauPrefixe), "%s%s",
+             prefixe, estDernier ? "    " : "|   ");
+
+    ListePers* enfants = pers->enfants;
+    while (enfants != NULL) {
+        int dernier = (enfants->suivant == NULL);
+        afficherArbreRecurs(enfants->pers, nouveauPrefixe, dernier);
+        enfants = enfants->suivant;
+    }
+}
+
+void afficherArbre(ListePers* arbre) {
     if (arbre == NULL) {
-        printf("Arbre vide.\n");
+        printf("  L'arbre est vide.\n");
         return;
     }
 
+    printf("\n================================================\n");
+    printf("            ARBRE GENEALOGIQUE\n");
+    printf("================================================\n\n");
+
+    /* Afficher d'abord les racines (personnes sans parents connus) */
     ListePers* courant = arbre;
+    int nbRacines = 0;
     while (courant != NULL) {
-        Pers* personne = get_pers_liste(courant);
-        afficherPers(personne);
-        courant = get_suiv_liste(courant);
+        Pers* p = courant->pers;
+        if (p->pere == NULL && p->mere == NULL) {
+            afficherLigneNoeud(p);
+            ListePers* enfants = p->enfants;
+            while (enfants != NULL) {
+                int dernier = (enfants->suivant == NULL);
+                afficherArbreRecurs(enfants->pers, "", dernier);
+                enfants = enfants->suivant;
+            }
+            printf("\n");
+            nbRacines++;
+        }
+        courant = courant->suivant;
+    }
+
+    /* Si aucune racine (tout le monde a des parents dans l'arbre),
+       afficher toutes les personnes en liste simple */
+    if (nbRacines == 0) {
+        printf("  (Aucune racine identifiee - affichage liste)\n\n");
+        courant = arbre;
+        while (courant != NULL) {
+            afficherPers(courant->pers);
+            courant = courant->suivant;
+        }
     }
 }
 

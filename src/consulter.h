@@ -23,5 +23,6 @@ void afficherDescendance(ListePers* arbre, Pers* personne);
 void afficherParentRecurs(ListePers* arbre, Pers* pers);
 void afficherAscendance(ListePers* arbre, Pers* personne);
 void affichage(ListePers* arbre);
+void afficherArbre(ListePers* arbre);
 
-#endif  // CONSULTER_H
+#endif  /* CONSULTER_H */

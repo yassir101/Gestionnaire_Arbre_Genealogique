@@ -28,24 +28,34 @@ Pers* creerPers() {
 }
 
 ListePers* ajouterPersonne(ListePers* arbre) {
-    Pers* nouvellePersonne = creerPers();
-
-    if (nouvellePersonne != NULL) {
-        ListePers* nouveauMaillon = (ListePers*)malloc(sizeof(ListePers));
-
-        if (nouveauMaillon != NULL) {
-            nouveauMaillon->pers = nouvellePersonne;
-            nouveauMaillon->suivant = arbre;
-            arbre = nouveauMaillon;
-        } else {
-            free(nouvellePersonne);
-            printf("Erreur d'allocation mémoire pour le maillon.\n");
-        }
-    } else {
-        printf("Erreur de création de la nouvelle personne.\n");
+    Pers* p = creerPers();
+    if (p == NULL) {
+        printf("  Erreur d'allocation.\n");
+        return arbre;
     }
 
-    return arbre;
+    printf("\n=== AJOUTER UNE PERSONNE ===\n");
+    printf("Nom        : "); scanf("%49s", p->nom);
+    printf("Prenom     : "); scanf("%49s", p->prenom);
+    printf("Naissance (jj mm aaaa, 0 0 0 si inconnue) : ");
+    scanf("%d %d %d", &p->naissance.jour, &p->naissance.mois, &p->naissance.annee);
+    printf("Vivant ? (1=oui 0=non) : ");
+    scanf("%d", &p->vivant);
+    if (!p->vivant) {
+        printf("Deces (jj mm aaaa, 0 0 0 si inconnue) : ");
+        scanf("%d %d %d", &p->deces.jour, &p->deces.mois, &p->deces.annee);
+    }
+
+    ListePers* maillon = (ListePers*)malloc(sizeof(ListePers));
+    if (maillon == NULL) {
+        free(p);
+        printf("  Erreur d'allocation.\n");
+        return arbre;
+    }
+    maillon->pers    = p;
+    maillon->suivant = arbre;
+    printf("  -> %s %s ajoute(e).\n", p->prenom, p->nom);
+    return maillon;
 }
 
 
