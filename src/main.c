@@ -1,19 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "getset.h"
-#include "files.h"
-#include "menus.c"
-#include "trouver_pers.h"
+#include "menus.h"
 #include "gestion.h"
+#include "files.h"
+#include "getset.h"
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
 
 int main() {
     ListePers* arbre = NULL;
 
-    int choix;
-
     do {
         arbre = menuPrincipal(arbre);
-        printf("\nAppuyez sur Entrée pour revenir au menu principal...");
+        printf("\nAppuyez sur Entree pour revenir au menu principal...");
+        getchar();
         getchar();
 
         clearScreen();

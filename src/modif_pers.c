@@ -3,15 +3,16 @@
 #include "files.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void modifierNom(Pers *pers){
     printf("Entrez le nouveau nom:\n ");
-    scanf("%s", pers->nom);
+    scanf("%49s", pers->nom);
 }
 
 void modifierPrenom(Pers *pers){
     printf("Entrez le nouveau prenom: \n");
-    scanf("%s", pers->prenom);
+    scanf("%49s", pers->prenom);
 }
 
 void modifierNaissance(Pers *pers) {
@@ -54,7 +55,7 @@ void supprimerLienParentReci(Pers *parent, Pers *enfant) {
 
 void ajouterEnfant(ListePers *arbre, Pers *pers) {
     int numEnfant;
-    printf("Entrez le numéro de l'enfant a ajouter : ");
+    printf("Entrez le numï¿½ro de l'enfant a ajouter : ");
     scanf("%d", &numEnfant);
 
     Pers *enfant = retrouverPersavecNumero(arbre, numEnfant);
@@ -113,7 +114,7 @@ void supprimerEnfant(Pers *pers)
 {
     if (pers->enfants != NULL) {
         int numEnfant;
-        printf("Entrez le numéro de l'enfant que l'on souhaite supprimer: ");
+        printf("Entrez le numï¿½ro de l'enfant que l'on souhaite supprimer: ");
         scanf("%d", &numEnfant);
 
         ListePers *nouvelleListe = sup_maillon_liste(pers->enfants, retrouverPersavecNumero(pers->enfants, numEnfant));

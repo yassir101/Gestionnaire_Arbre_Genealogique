@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "menus.h"
-#include "gestion.c"
-#include "getset.c"
-#include "files.c"
-#include "consulter.c"
+#include "gestion.h"
+#include "getset.h"
+#include "files.h"
+#include "consulter.h"
 
 
 void chargement() {
@@ -115,14 +115,21 @@ void modifierPers(ListePers* arbre) {
     int choix;
     Pers* personneChoisie = NULL;
 
+    numero(arbre);
     afficherTLM(arbre);
 
     printf("Choisissez le numero de la personne que vous souhaitez modifier : ");
     scanf("%d", &choix);
 
     personneChoisie = retrouverPersavecNumero(arbre, choix);
+
+    if (personneChoisie == NULL) {
+        printf("Personne introuvable.\n");
+        return;
+    }
+
     printf("\nInformations actuelles :\n");
-    afficherPers(personneAModifier);
+    afficherPers(personneChoisie);
 
     int choixModification;
     do {
@@ -138,19 +145,19 @@ void modifierPers(ListePers* arbre) {
 
         switch (choixModification) {
             case 1:
-                modifierNom(personneAModifier);
+                modifierNom(personneChoisie);
                 break;
             case 2:
-                modifierPrenom(personneAModifier);
+                modifierPrenom(personneChoisie);
                 break;
             case 3:
-                modifierNaissance(personneAModifier);
+                modifierNaissance(personneChoisie);
                 break;
             case 4:
-                modifierDeces(personneAModifier);
+                modifierDeces(personneChoisie);
                 break;
             case 5:
-                modifierVivant(personneAModifier);
+                modifierVivant(personneChoisie);
                 break;
             case 6:
                 break;
@@ -161,7 +168,16 @@ void modifierPers(ListePers* arbre) {
     } while (choixModification != 6);
 
     printf("\nInformations mises a jour :\n");
-    afficherPers(personneAModifier);
+    afficherPers(personneChoisie);
+}
+
+static Pers* choisirPersonne(ListePers* arbre) {
+    numero(arbre);
+    afficherTLM(arbre);
+    printf("Entrez le numero de la personne : ");
+    int choix;
+    scanf("%d", &choix);
+    return retrouverPersavecNumero(arbre, choix);
 }
 
 void consulter(ListePers* arbre) {
